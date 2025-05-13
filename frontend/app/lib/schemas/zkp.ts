@@ -21,3 +21,12 @@ export const wellFormedVoteProofSchema = z.object({
 })
 
 export type WellFormedVoteProof = z.infer<typeof wellFormedVoteProofSchema>
+
+export const singleVoteSumProofSchema = z.object({
+  A_: ecPointSchema,
+  B_: ecPointSchema,
+  c: z.bigint(),
+  R__: z.bigint(),
+})
+
+export type SingleVoteSumProof = z.infer<typeof singleVoteSumProofSchema>

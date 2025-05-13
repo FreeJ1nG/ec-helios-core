@@ -1,6 +1,13 @@
 import { ProjPointType } from '@noble/curves/abstract/weierstrass'
 import { secp256k1 } from '@noble/curves/secp256k1'
 
+import { EcPoint } from '../schemas/ecc'
+
+/**
+ * @description This function converts an ArrayBuffer to a hex string.
+ * @param buf - The ArrayBuffer to be converted to a hex string
+ * @returns A hex string representation of the ArrayBuffer
+ */
 function bufToHexString(buf: ArrayBuffer): string {
   const arr = new Uint8Array(buf)
   return (
@@ -12,8 +19,8 @@ function bufToHexString(buf: ArrayBuffer): string {
 }
 
 /**
- * @returns A random 256-bit number
  * @description This function generates a random 256-bit number using the Web Crypto API.
+ * @returns A random 256-bit number
  */
 export function rnd256(): bigint {
   const buf = new Uint8Array(32)
@@ -23,13 +30,14 @@ export function rnd256(): bigint {
 }
 
 /**
+ * @description This function generates a random number between 1 and n (inclusive of 1, exclusive of n), where n is the order of the Elliptic Curve group secp256k1.
  * @param n - The upper limit (exclusive)
  * @returns A random number between 1 and n (inclusive of 1, exclusive of n)
  */
 export function rndEc(): bigint {
   const r = rnd256()
   const n = secp256k1.CURVE.n
-  return (r % (n + 1n)) + 1n
+  return (r % n) + 1n
 }
 
 /**
@@ -44,8 +52,10 @@ export async function hashPointsToScalar(
   for (const point of points) {
     cumulativePoint = cumulativePoint.add(point)
   }
-  return sha256(
-    cumulativePoint.x.toString() + ',' + cumulativePoint.y.toString(),
+  return (
+    (await sha256(
+      cumulativePoint.x.toString() + ',' + cumulativePoint.y.toString(),
+    )) % secp256k1.CURVE.n
   )
 }
 
@@ -66,3 +76,7 @@ export const EncodedVote = [
   secp256k1.ProjectivePoint.BASE,
   secp256k1.ProjectivePoint.BASE.multiply(2n),
 ]
+
+export function toProjPoint(p: EcPoint): ProjPointType<bigint> {
+  return secp256k1.ProjectivePoint.fromAffine({ x: p.x, y: p.y })
+}
