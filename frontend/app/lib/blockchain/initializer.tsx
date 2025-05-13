@@ -1,19 +1,20 @@
-import { useEffect } from "react";
-import { useBlockchainStore } from "~/lib/store/blockchain";
+import { useEffect } from 'react'
+
+import { useBlockchainStore } from '~/lib/store/blockchain.ts'
 
 export interface BlockchainInitializerProps {
-  blockchainAddress?: string;
+  blockchainAddress?: string
 }
 
 export default function BlockchainInitializer({
   blockchainAddress,
 }: BlockchainInitializerProps) {
-  const { setContractAddress, setContract } = useBlockchainStore();
+  const { setContractAddress, setContract } = useBlockchainStore()
 
   useEffect(() => {
-    if (blockchainAddress) setContractAddress(blockchainAddress);
-    setContract();
-  }, [blockchainAddress, setContractAddress, setContract]);
+    if (blockchainAddress) setContractAddress(blockchainAddress)
+    setContract()
+  }, [blockchainAddress, setContractAddress, setContract])
 
-  return null;
+  return null
 }

@@ -1,12 +1,13 @@
-import { z } from "zod";
-import { ecPointSchema } from "./ecc";
+import { z } from 'zod'
+
+import { ecPointSchema } from '~/lib/schemas/ecc.ts'
 
 export const keyOwnershipProofSchema = z.object({
   c: z.bigint(),
   d: z.bigint(),
-});
+})
 
-export type KeyOwnershipProof = z.infer<typeof keyOwnershipProofSchema>;
+export type KeyOwnershipProof = z.infer<typeof keyOwnershipProofSchema>
 
 export const wellFormedVoteProofSchema = z.object({
   a0_: ecPointSchema,
@@ -17,6 +18,6 @@ export const wellFormedVoteProofSchema = z.object({
   c1: z.bigint(),
   r0__: z.bigint(),
   r1__: z.bigint(),
-});
+})
 
-export type WellFormedVoteProof = z.infer<typeof wellFormedVoteProofSchema>;
+export type WellFormedVoteProof = z.infer<typeof wellFormedVoteProofSchema>

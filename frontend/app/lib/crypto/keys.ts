@@ -1,10 +1,11 @@
-import { rnd256 } from "~/lib/crypto/common";
-import { secp256k1 } from "@noble/curves/secp256k1";
-import { ProjPointType } from "@noble/curves/abstract/weierstrass";
+import { ProjPointType } from '@noble/curves/abstract/weierstrass'
+import { secp256k1 } from '@noble/curves/secp256k1'
+
+import { rndEc } from '~/lib/crypto/common.ts'
 
 export interface AuthorityKey {
-  sk: bigint;
-  pk: ProjPointType<bigint>;
+  sk: bigint
+  pk: ProjPointType<bigint>
 }
 
 /**
@@ -12,10 +13,10 @@ export interface AuthorityKey {
  * @returns A random ElGamal key pair
  */
 export function generateRandomElGamalKey(): AuthorityKey {
-  const sk = rnd256();
-  const pk = secp256k1.ProjectivePoint.BASE.multiply(sk);
+  const sk = rndEc()
+  const pk = secp256k1.ProjectivePoint.BASE.multiply(sk)
   return {
     sk,
     pk,
-  };
+  }
 }
