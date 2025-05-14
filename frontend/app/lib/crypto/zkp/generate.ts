@@ -124,10 +124,6 @@ export async function generateSingleVoteSumProof(
     B = B.add(toProjPoint(votes[i].ciphertext.b))
   }
 
-  // const B_red = B.subtract(
-  //   EncodedVote[1].add(EncodedVote[0].multiply(BigInt(votes.length - 1))),
-  // )
-
   const R_ = rndEc()
   const A_ = secp256k1.ProjectivePoint.BASE.multiply(R_)
   const B_ = pk.multiply(R_)

@@ -1,5 +1,4 @@
 import { secp256k1 } from '@noble/curves/secp256k1'
-import type { MetaFunction } from '@remix-run/node'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -16,13 +15,6 @@ import {
 import { EcPoint, ecPointSchema } from '~/lib/schemas/ecc.ts'
 import { Authority, authoritySchema, Ballot } from '~/lib/schemas/helios.ts'
 import { useBlockchainStore } from '~/lib/store/blockchain.ts'
-
-export const meta: MetaFunction = () => {
-  return [
-    { title: 'New Remix App' },
-    { name: 'description', content: 'Welcome to Remix!' },
-  ]
-}
 
 export default function Index() {
   const { contract } = useBlockchainStore()
@@ -105,7 +97,7 @@ export default function Index() {
   return loading ? (
     <LoadingScreen />
   ) : (
-    <div className="flex min-h-screen flex-col items-center justify-center pb-12">
+    <div className="flex min-h-[calc(100dvh-64px)] flex-col items-center justify-center pb-12">
       <div className="mb-5 text-2xl">Curved being used: secp256k1 curve</div>
       <div>Candidates: </div>
       <div className="mb-4">

@@ -190,7 +190,6 @@ contract Election is Ecc, Zkp, Utils {
     function getBallots(
         uint256 page
     ) external view returns (PaginatedBallot memory) {
-        console.log(" >>", msg.sender);
         if (ballots.length == 0) {
             return PaginatedBallot({ballots: new Ballot[](0), totalPage: 0});
         }
