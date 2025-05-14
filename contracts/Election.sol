@@ -6,15 +6,7 @@ import "./Utils.sol";
 import "hardhat/console.sol";
 
 contract Election is Ecc, Zkp, Utils {
-    enum ElectionStatus {
-        VoterRegistration,
-        Voting,
-        Tallying,
-        Completed
-    }
-
     string[] public candidates;
-    ElectionStatus public status = ElectionStatus.VoterRegistration;
 
     struct Key {
         address owner;
@@ -33,6 +25,7 @@ contract Election is Ecc, Zkp, Utils {
     }
 
     struct Ballot {
+        uint64 id;
         address from;
         Vote[] votes;
         SingleVoteSumProof singleVoteSumProof;
@@ -43,10 +36,10 @@ contract Election is Ecc, Zkp, Utils {
         uint256 totalPage;
     }
 
+    uint64 public endTime;
     EcPoint public electionPublicKey;
-
     Key[] public authorities;
-    Ballot[] ballots;
+    Ballot[] public ballots;
     mapping(address => bool) isEligibleVoter;
     mapping(address => bool) hasVoted;
 
@@ -55,12 +48,9 @@ contract Election is Ecc, Zkp, Utils {
     constructor(
         Key[] memory _authorityKeys,
         string[] memory _candidates,
-        address[] memory _whitelistedAddresses
+        address[] memory _whitelistedAddresses,
+        uint64 _endTime
     ) {
-        require(
-            status == ElectionStatus.VoterRegistration,
-            "Election already started"
-        );
         require(_candidates.length > 1, "At least two candidates are required");
         require(
             _authorityKeys.length > 0,
@@ -116,7 +106,7 @@ contract Election is Ecc, Zkp, Utils {
         }
 
         candidates = _candidates;
-        status = ElectionStatus.Voting;
+        endTime = _endTime;
     }
 
     function getCandidates() external view returns (string[] memory) {
@@ -129,16 +119,16 @@ contract Election is Ecc, Zkp, Utils {
 
     function submitBallot(BallotInput memory _ballot) external payable {
         require(
+            block.timestamp <= endTime,
+            "Voting period has ended, no longer able to cast ballot"
+        );
+        require(
             isEligibleVoter[msg.sender],
             "This voter is not eligible, please consult the election authority for further detail"
         );
         require(
             !hasVoted[msg.sender],
             "This voter has voted before, voters can only vote once"
-        );
-        require(
-            status == ElectionStatus.Voting,
-            "Election is not in voting state"
         );
         require(
             _ballot.votes.length == candidates.length,
@@ -178,6 +168,7 @@ contract Election is Ecc, Zkp, Utils {
         );
 
         Ballot memory newBallot = Ballot({
+            id: uint64(ballots.length),
             from: msg.sender,
             votes: _ballot.votes,
             singleVoteSumProof: _ballot.singleVoteSumProof
@@ -190,10 +181,9 @@ contract Election is Ecc, Zkp, Utils {
     function getBallots(
         uint256 page
     ) external view returns (PaginatedBallot memory) {
-        if (ballots.length == 0) {
+        if (ballots.length == 0)
             return PaginatedBallot({ballots: new Ballot[](0), totalPage: 0});
-        }
-        uint256 BALLOT_PER_PAGE = 50;
+        uint256 BALLOT_PER_PAGE = 5;
         uint256 totalPage = upDiv(ballots.length, BALLOT_PER_PAGE);
         require(page <= totalPage, "Page out of range");
         uint256 start = (page - 1) * BALLOT_PER_PAGE;
@@ -205,5 +195,19 @@ contract Election is Ecc, Zkp, Utils {
             pageBallots[i - start] = ballots[i];
         }
         return PaginatedBallot({ballots: pageBallots, totalPage: totalPage});
+    }
+
+    function getAllBallots() external view returns (Ballot[] memory) {
+        bool isAuthority = false;
+        for (uint256 i = 0; i < authorities.length; i++) {
+            if (msg.sender == authorities[i].owner) {
+                isAuthority = true;
+            }
+        }
+        require(
+            isAuthority,
+            "Must be election authority to call this function, unauthorized access"
+        );
+        return ballots;
     }
 }

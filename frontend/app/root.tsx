@@ -9,13 +9,19 @@ import {
   ScrollRestoration,
   useLoaderData,
 } from '@remix-run/react'
-import { useEffect } from 'react'
+import dayjs from 'dayjs'
+import { useEffect, useState } from 'react'
+import { z } from 'zod'
 
 import ClientOnly from '~/components/client-only.tsx'
+import LoadingScreen from '~/components/loading-screen.tsx'
 import Navbar from '~/components/navbar.tsx'
 import { Toaster } from '~/components/ui/sonner.tsx'
 import BlockchainInitializer from '~/lib/blockchain/initializer.tsx'
+import { decodeArrayOfStruct } from '~/lib/blockchain/utils.ts'
+import { authoritySchema } from '~/lib/schemas/helios.ts'
 import { useBlockchainStore } from '~/lib/store/blockchain.ts'
+import { useDataStore } from '~/lib/store/data.ts'
 
 export const links: LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -56,17 +62,36 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export function HydrateFallback() {
-  return <div>Loading ...</div>
+  return <LoadingScreen />
 }
 
 export default function App() {
+  const [loading, setLoading] = useState<boolean>(true)
   const { blockchainAddress } = useLoaderData<typeof loader>()
-  const { setContractAddress, setContract } = useBlockchainStore()
+  const { setContractAddress, setContract, contract } = useBlockchainStore()
+  const { setAuthorities, setCandidates, setElectionEndTime } = useDataStore()
 
   useEffect(() => {
     if (blockchainAddress) setContractAddress(blockchainAddress)
     setContract()
   }, [blockchainAddress, setContractAddress, setContract])
+
+  useEffect(() => {
+    if (!contract) return
+    setLoading(true);
+    (async () => {
+      const [cauthorities, ccandidates, cendTime] = await Promise.all([
+        contract.getAuthorities(),
+        contract.getCandidates(),
+        contract.endTime(),
+      ])
+      const authorities = decodeArrayOfStruct(cauthorities, authoritySchema)
+
+      setElectionEndTime(dayjs(1000 * Number(z.bigint().parse(cendTime))))
+      setCandidates(z.array(z.string()).parse(ccandidates))
+      await setAuthorities(authorities)
+    })().finally(() => setLoading(false))
+  }, [contract])
 
   return (
     <>
@@ -74,7 +99,7 @@ export default function App() {
         <BlockchainInitializer blockchainAddress={blockchainAddress} />
       </ClientOnly>
       <Navbar />
-      <Outlet />
+      {loading ? <LoadingScreen /> : <Outlet />}
     </>
   )
 }

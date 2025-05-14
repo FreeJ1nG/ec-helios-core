@@ -22,6 +22,8 @@ export const voteSchema = z.object({
 export type Vote = z.infer<typeof voteSchema>
 
 export const ballotSchema = z.object({
+  id: z.bigint(),
+  from: z.string(),
   votes: z.array(voteSchema),
   singleVoteSumProof: singleVoteSumProofSchema,
 })

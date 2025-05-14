@@ -1,6 +1,7 @@
 // This setup uses Hardhat Ignition to manage smart contract deployments.
 // Learn more about it at https://hardhat.org/ignition
 
+import dayjs from "dayjs";
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 const _andrew = {
@@ -57,6 +58,7 @@ export default buildModule("ElectionModule", (m) => {
       "0xBcd4042DE499D14e55001CcbB24a551F3b954096", // Account #10 from hardhat
       "0x71bE63f3384f5fb98995898A86B02Fb2426c5788", // Account #11 from hardhat
     ],
+    dayjs().add(5, "minute").unix(),
   ]);
 
   return { election };

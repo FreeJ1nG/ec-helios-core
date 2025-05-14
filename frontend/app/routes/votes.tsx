@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { z } from 'zod'
 
 import LoadingScreen from '~/components/loading-screen.tsx'
 import PaginationGroup from '~/components/pagination-group.tsx'
@@ -7,35 +6,52 @@ import ProofDisplay from '~/components/proof-display.tsx'
 import { decodeStruct } from '~/lib/blockchain/utils.ts'
 import { Ballot, paginatedBallotsSchema } from '~/lib/schemas/helios.ts'
 import { useBlockchainStore } from '~/lib/store/blockchain.ts'
+import { useDataStore } from '~/lib/store/data.ts'
 
 export default function VotesPage() {
   const { contract } = useBlockchainStore()
+  const { candidates } = useDataStore()
   const [page, setPage] = useState<number>(1)
   const [totalPage, setTotalPage] = useState<number>(1)
   const [ballots, setBallots] = useState<Ballot[]>([])
-  const [candidates, setCandidates] = useState<string[]>([])
   const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    if (!contract) return;
+    if (!contract) return
+    setLoading(true);
     (async () => {
-      const [ccandidates, cballots] = await Promise.all([
-        contract.getCandidates(),
-        contract.getBallots(page),
-      ])
-      setCandidates(z.array(z.string()).parse(ccandidates))
+      const cballots = await contract.getBallots(page)
+      const ballots = decodeStruct(cballots, paginatedBallotsSchema)
+      setBallots(ballots.ballots)
+      setTotalPage(Number(ballots.totalPage))
+    })().finally(() => setLoading(false))
+  }, [contract, page])
+
+  useEffect(() => {
+    if (!contract) return
+    setLoading(true);
+    (async () => {
+      const cballots = await contract.getBallots(page)
       const ballots = decodeStruct(cballots, paginatedBallotsSchema)
       setBallots(ballots.ballots)
       setTotalPage(Number(ballots.totalPage))
     })().finally(() => setLoading(false))
   }, [contract])
 
-  return loading ? (
+  return loading || !candidates ? (
     <LoadingScreen />
   ) : (
     <div className="flex min-h-[calc(100dvh-64px)] flex-col items-center justify-center pb-12">
       {ballots.map((ballot, i) => (
         <div key={i} className="mt-6 flex flex-col">
+          <div>
+            Vote #
+            {ballot.id.toString()}
+            {' '}
+            from
+            {' '}
+            {ballot.from}
+          </div>
           <div>
             {ballot.votes.map((v, i) => (
               <div
