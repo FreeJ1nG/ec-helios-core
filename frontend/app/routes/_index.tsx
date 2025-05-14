@@ -92,7 +92,10 @@ export default function Index() {
       toast.success('Your ballot has been cast! thanks for voting :D')
     }
     catch (e) {
-      toast.error('Unable to cast your ballot: ' + e)
+      console.error(e)
+      toast.error(
+        'Unable to cast your ballot, read console for error message (yeah it\'s currently a bit tedious)',
+      )
     }
     finally {
       setIsSubmittingBallot(false)
