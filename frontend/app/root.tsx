@@ -11,10 +11,11 @@ import {
 } from '@remix-run/react'
 import { useEffect } from 'react'
 
-import ClientOnly from '~/common/components/client-only.tsx'
+import ClientOnly from '~/components/client-only.tsx'
+import Navbar from '~/components/navbar.tsx'
+import { Toaster } from '~/components/ui/sonner.tsx'
+import BlockchainInitializer from '~/lib/blockchain/initializer.tsx'
 import { useBlockchainStore } from '~/lib/store/blockchain.ts'
-
-import BlockchainInitializer from './lib/blockchain/initializer.tsx'
 
 export const links: LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -46,6 +47,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <Toaster />
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -71,6 +73,7 @@ export default function App() {
       <ClientOnly>
         <BlockchainInitializer blockchainAddress={blockchainAddress} />
       </ClientOnly>
+      <Navbar />
       <Outlet />
     </>
   )
