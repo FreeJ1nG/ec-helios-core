@@ -1,4 +1,6 @@
 import ProofDisplay from '~/components/proof-display.tsx'
+import { toProjPoint } from '~/lib/crypto/common.ts'
+import { verifyKeyOwnershipProof } from '~/lib/crypto/zkp/verify.ts'
 import { Authority } from '~/lib/schemas/helios.ts'
 
 export interface AuthorityListProps {
@@ -30,6 +32,8 @@ export default function AuthorityList({ authorities }: AuthorityListProps) {
             label="that authority has a matching secret key"
             proofLabel="ownership"
             proof={auth.proof}
+            verifyProofFn={proof =>
+              verifyKeyOwnershipProof(toProjPoint(auth.publicKey), proof)}
             className="mt-1"
           />
         </div>

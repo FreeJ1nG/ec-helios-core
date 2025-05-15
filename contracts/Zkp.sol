@@ -61,14 +61,20 @@ contract Zkp is Ecc {
 
         // Third equation to check: pk . r0__ = b0_ + (b - EncodedVote[0]) . c0
         lhs = ecMul(_proof.r0__, _pk);
-        rhs = ecAdd(_proof.b0_, ecMul(_proof.c0, ecSub(_ciphertext.b, encodeVote(0))));
+        rhs = ecAdd(
+            _proof.b0_,
+            ecMul(_proof.c0, ecSub(_ciphertext.b, encodeVote(0)))
+        );
         if (lhs.x != rhs.x || lhs.y != rhs.y) return false;
 
         // Fourth equation to check: pk . r1__ = b1_ + (b - EncodedVote[1]) . c1
         lhs = ecMul(_proof.r1__, _pk);
-        rhs = ecAdd(_proof.b1_, ecMul(_proof.c1, ecSub(_ciphertext.b, encodeVote(1))));
+        rhs = ecAdd(
+            _proof.b1_,
+            ecMul(_proof.c1, ecSub(_ciphertext.b, encodeVote(1)))
+        );
         if (lhs.x != rhs.x || lhs.y != rhs.y) return false;
-        
+
         EcPoint[] memory _points = new EcPoint[](7);
         _points[0] = _pk;
         _points[1] = _ciphertext.a;
@@ -79,7 +85,9 @@ contract Zkp is Ecc {
         _points[6] = _proof.b1_;
 
         // Fifth equation to check: c0 + c1 = H(pk, a, b, a0_, b0_, a1_, b1_)
-        return addmod(_proof.c0, _proof.c1, N) == hashMultiplePointsToScalar(_points) % N;
+        return
+            addmod(_proof.c0, _proof.c1, N) ==
+            hashMultiplePointsToScalar(_points) % N;
     }
 
     function verifySingleSumVoteProof(
@@ -92,15 +100,24 @@ contract Zkp is Ecc {
 
         // First equation to check: G . R__ = A_ + A . c
         EcPoint memory lhs = ecMul(_proof.R__, G);
-        EcPoint memory rhs = ecAdd(_proof.A_, ecMul(_proof.c, _ciphertextSum.a));
+        EcPoint memory rhs = ecAdd(
+            _proof.A_,
+            ecMul(_proof.c, _ciphertextSum.a)
+        );
         if (lhs.x != rhs.x || lhs.y != rhs.y) return false;
 
         // Second equation to check: pk . R__ = B_ + (B - (EncodedVote[1] + (k - 1) * EncodedVote[0])) . c, where k is the number of candidates
         lhs = ecMul(_proof.R__, _pk);
-        rhs = ecAdd(_proof.B_, ecMul(_proof.c, ecSub(_ciphertextSum.b, ecAdd(
-            encodeVote(1),
-            ecMul(candidateNum - 1, encodeVote(0))
-        ))));
+        rhs = ecAdd(
+            _proof.B_,
+            ecMul(
+                _proof.c,
+                ecSub(
+                    _ciphertextSum.b,
+                    ecAdd(encodeVote(1), ecMul(candidateNum - 1, encodeVote(0)))
+                )
+            )
+        );
         if (lhs.x != rhs.x || lhs.y != rhs.y) return false;
 
         EcPoint[] memory _points = new EcPoint[](5);

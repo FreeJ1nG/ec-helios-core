@@ -58,7 +58,7 @@ export default buildModule("ElectionModule", (m) => {
       "0xBcd4042DE499D14e55001CcbB24a551F3b954096", // Account #10 from hardhat
       "0x71bE63f3384f5fb98995898A86B02Fb2426c5788", // Account #11 from hardhat
     ],
-    dayjs().add(5, "minute").unix(),
+    dayjs().add(2, "days").unix(),
   ]);
 
   return { election };

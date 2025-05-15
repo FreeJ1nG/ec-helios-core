@@ -2,7 +2,7 @@ import { ProjPointType } from '@noble/curves/abstract/weierstrass'
 import { secp256k1 } from '@noble/curves/secp256k1'
 
 import { EncodedVote, rndEc } from '~/lib/crypto/common.ts'
-import { ECElGamalCiphertext } from '~/lib/schemas/ecc.ts'
+import { ECElGamalCiphertext, EcPoint } from '~/lib/schemas/ecc.ts'
 
 export function encrypt(
   v: number,
@@ -14,3 +14,5 @@ export function encrypt(
   const b = EncodedVote[v].add(pk.multiply(r))
   return { a, b }
 }
+
+export function verifyAndTallyBallots(ballots: Ballot[]): EcPoint[] {}

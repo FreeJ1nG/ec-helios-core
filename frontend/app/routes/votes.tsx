@@ -4,13 +4,18 @@ import LoadingScreen from '~/components/loading-screen.tsx'
 import PaginationGroup from '~/components/pagination-group.tsx'
 import ProofDisplay from '~/components/proof-display.tsx'
 import { decodeStruct } from '~/lib/blockchain/utils.ts'
+import { toProjPoint } from '~/lib/crypto/common.ts'
+import {
+  verifySingleVoteSumProof,
+  verifyWellFormedVote,
+} from '~/lib/crypto/zkp/verify.ts'
 import { Ballot, paginatedBallotsSchema } from '~/lib/schemas/helios.ts'
 import { useBlockchainStore } from '~/lib/store/blockchain.ts'
 import { useDataStore } from '~/lib/store/data.ts'
 
 export default function VotesPage() {
   const { contract } = useBlockchainStore()
-  const { candidates } = useDataStore()
+  const { candidates, electionPublicKey } = useDataStore()
   const [page, setPage] = useState<number>(1)
   const [totalPage, setTotalPage] = useState<number>(1)
   const [ballots, setBallots] = useState<Ballot[]>([])
@@ -84,6 +89,16 @@ export default function VotesPage() {
                   label="that vote is well formed"
                   proofLabel={candidates[i]}
                   proof={v.wellFormedVoteProof}
+                  verifyProofFn={
+                    electionPublicKey
+                      ? proof =>
+                        verifyWellFormedVote(
+                          toProjPoint(electionPublicKey),
+                          v.ciphertext,
+                          proof,
+                        )
+                      : undefined
+                  }
                 />
               </div>
             ))}
@@ -92,6 +107,16 @@ export default function VotesPage() {
             label="that ballot is directed at one candidate"
             proofLabel="sum"
             proof={ballot.singleVoteSumProof}
+            verifyProofFn={
+              electionPublicKey
+                ? () =>
+                    verifySingleVoteSumProof(
+                      toProjPoint(electionPublicKey),
+                      ballot,
+                      candidates.length,
+                    )
+                : undefined
+            }
             className="mt-4"
           />
         </div>

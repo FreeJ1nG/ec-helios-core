@@ -128,7 +128,7 @@ export async function generateSingleVoteSumProof(
   const A_ = secp256k1.ProjectivePoint.BASE.multiply(R_)
   const B_ = pk.multiply(R_)
   const c = await hashPointsToScalar([pk, A, B, A_, B_])
-  const R__ = (R_ + c * R) % secp256k1.CURVE.n
+  const R__ = (R_ + ((c * R) % secp256k1.CURVE.n)) % secp256k1.CURVE.n
   return {
     A_,
     B_,

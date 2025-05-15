@@ -97,8 +97,8 @@ contract Election is Ecc, Zkp, Utils {
         }
 
         // Get the election public key by summing the public keys of all authorities
-        electionPublicKey = _authorityKeys[0].publicKey;
-        for (uint256 i = 1; i < _authorityKeys.length; i++) {
+        electionPublicKey = EcPoint(0, 0);
+        for (uint256 i = 0; i < _authorityKeys.length; i++) {
             electionPublicKey = ecAdd(
                 electionPublicKey,
                 _authorityKeys[i].publicKey
@@ -146,8 +146,11 @@ contract Election is Ecc, Zkp, Utils {
             );
         }
 
-        ECElGamalCiphertext memory _ciphertextSum = _ballot.votes[0].ciphertext;
-        for (uint256 i = 1; i < _ballot.votes.length; i++) {
+        ECElGamalCiphertext memory _ciphertextSum = ECElGamalCiphertext({
+            a: EcPoint(0, 0),
+            b: EcPoint(0, 0)
+        });
+        for (uint256 i = 0; i < _ballot.votes.length; i++) {
             _ciphertextSum.a = ecAdd(
                 _ciphertextSum.a,
                 _ballot.votes[i].ciphertext.a

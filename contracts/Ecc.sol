@@ -11,10 +11,10 @@ contract Ecc {
     struct EccParams {
         uint256 gx; // Generator point x-coordinate
         uint256 gy; // Generator point y-coordinate
-        uint256 a;  // Elliptic curve parameter A
-        uint256 b;  // Elliptic curve parameter B
-        uint256 p;  // Prime modulus
-        uint256 n;  // Order of the curve
+        uint256 a; // Elliptic curve parameter A
+        uint256 b; // Elliptic curve parameter B
+        uint256 p; // Prime modulus
+        uint256 n; // Order of the curve
     }
 
     struct ECElGamalCiphertext {
@@ -29,8 +29,10 @@ contract Ecc {
         0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8; // Generator point y-coordinate
     uint256 public constant A = 0; // Elliptic curve parameter A
     uint256 public constant B = 7; // Elliptic curve parameter B
-    uint256 public constant P = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F; // Prime modulus
-    uint256 public constant N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141; // Order of the curve
+    uint256 public constant P =
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F; // Prime modulus
+    uint256 public constant N =
+        0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141; // Order of the curve
     EcPoint public G = EcPoint(GX, GY); // Generator point
 
     function encodeVote(uint256 v) public view returns (EcPoint memory) {
@@ -45,14 +47,7 @@ contract Ecc {
     }
 
     function getECCParams() external pure returns (EccParams memory) {
-        return EccParams({
-            gx: GX,
-            gy: GY,
-            a: A,
-            b: B,
-            p: P,
-            n: N
-        });
+        return EccParams({gx: GX, gy: GY, a: A, b: B, p: P, n: N});
     }
 
     // Pre-computed constant for 2 ** 255
@@ -64,19 +59,26 @@ contract Ecc {
      * @param points An array of elliptic curve points to hash.
      * @return A scalar derived from the hash of the points.
      */
-    function hashMultiplePointsToScalar(EcPoint[] memory points) public pure returns (uint256) {
+    function hashMultiplePointsToScalar(
+        EcPoint[] memory points
+    ) public pure returns (uint256) {
         require(points.length > 0, "No points provided");
-        EcPoint memory compactPoints = points[0];
 
-        for (uint256 i = 1; i < points.length; i++) {
+        EcPoint memory compactPoints = EcPoint(0, 0);
+        for (uint256 i = 0; i < points.length; i++) {
             compactPoints = ecAdd(compactPoints, points[i]);
         }
 
-        return uint256(sha256(abi.encodePacked(
-            Strings.toString(compactPoints.x),
-            ",",
-            Strings.toString(compactPoints.y)
-        )));
+        return
+            uint256(
+                sha256(
+                    abi.encodePacked(
+                        Strings.toString(compactPoints.x),
+                        ",",
+                        Strings.toString(compactPoints.y)
+                    )
+                )
+            );
     }
 
     /**
@@ -85,10 +87,12 @@ contract Ecc {
      * @param y The y-coordinate of the point.
      * @return An EcPoint struct representing the elliptic curve point.
      */
-    function newEcPoint(uint256 x, uint256 y) public pure returns (EcPoint memory) {
+    function newEcPoint(
+        uint256 x,
+        uint256 y
+    ) public pure returns (EcPoint memory) {
         return EcPoint(x, y);
     }
-
 
     /// @dev Modular euclidean inverse of a number (mod p).
     /// @param _x The number
@@ -114,12 +118,9 @@ contract Ecc {
     /// @param _exp exponent
     /// @return r such that r = b**e (mod _pp)
     function expMod(
-            uint256 _base,
-            uint256 _exp
-        )
-        internal pure
-        returns (uint256) 
-    {
+        uint256 _base,
+        uint256 _exp
+    ) internal pure returns (uint256) {
         require(P != 0, "EllipticCurve: modulus is zero");
 
         if (_base == 0) return 0;
@@ -166,13 +167,10 @@ contract Ecc {
     /// @param _z coordinate z
     /// @return (x', y') affine coordinates
     function toAffine(
-            uint256 _x,
-            uint256 _y,
-            uint256 _z
-        )
-        internal pure 
-        returns (EcPoint memory)
-    {
+        uint256 _x,
+        uint256 _y,
+        uint256 _z
+    ) internal pure returns (EcPoint memory) {
         uint256 zInv = invMod(_z);
         uint256 zInv2 = mulmod(zInv, zInv, P);
         uint256 x2 = mulmod(_x, zInv2, P);
@@ -186,12 +184,9 @@ contract Ecc {
     /// @param _x coordinate x
     /// @return y coordinate y
     function deriveY(
-            uint8 _prefix,
-            uint256 _x
-        ) 
-        internal pure 
-        returns (uint256) 
-    {
+        uint8 _prefix,
+        uint256 _x
+    ) internal pure returns (uint256) {
         require(
             _prefix == 0x02 || _prefix == 0x03,
             "EllipticCurve:innvalid compressed EC point prefix"
@@ -214,13 +209,7 @@ contract Ecc {
     /// @param _x coordinate x of P1
     /// @param _y coordinate y of P1
     /// @return true if x,y in the curve, false else
-    function isOnCurve(
-            uint _x,
-            uint _y
-        ) 
-        internal pure 
-        returns (bool) 
-    {
+    function isOnCurve(uint _x, uint _y) internal pure returns (bool) {
         if (0 == _x || _x >= P || 0 == _y || _y >= P) {
             return false;
         }
@@ -243,12 +232,7 @@ contract Ecc {
     /// @dev Calculate inverse (x, -y) of point (x, y).
     /// @param _p coordinate P
     /// @return (x, -y)
-    function ecInv(
-            EcPoint memory _p
-        ) 
-        internal pure 
-        returns (EcPoint memory) 
-    {
+    function ecInv(EcPoint memory _p) internal pure returns (EcPoint memory) {
         return EcPoint(_p.x, (P - _p.y) % P);
     }
 
@@ -257,12 +241,9 @@ contract Ecc {
     /// @param _p2 coordinate P2
     /// @return (qx, qy) = P1+P2 in affine coordinates
     function ecAdd(
-            EcPoint memory _p1,
-            EcPoint memory _p2
-        ) 
-        internal pure 
-        returns (EcPoint memory) 
-    {
+        EcPoint memory _p1,
+        EcPoint memory _p2
+    ) internal pure returns (EcPoint memory) {
         uint x = 0;
         uint y = 0;
         uint z = 0;
@@ -288,12 +269,9 @@ contract Ecc {
     /// @param _p2 coordinate P2
     /// @return (qx, qy) = P1-P2 in affine coordinates
     function ecSub(
-            EcPoint memory _p1,
-            EcPoint memory _p2
-        ) 
-        internal pure 
-        returns (EcPoint memory) 
-    {
+        EcPoint memory _p1,
+        EcPoint memory _p2
+    ) internal pure returns (EcPoint memory) {
         // invert square
         EcPoint memory inv = ecInv(_p2);
         // P1-square
@@ -305,12 +283,9 @@ contract Ecc {
     /// @param _p coordinate P
     /// @return (qx, qy) = d*P in affine coordinates
     function ecMul(
-            uint256 _k,
-            EcPoint memory _p
-        ) 
-        internal pure 
-        returns (EcPoint memory) 
-    {
+        uint256 _k,
+        EcPoint memory _p
+    ) internal pure returns (EcPoint memory) {
         // Jacobian multiplication
         (uint256 x1, uint256 y1, uint256 z1) = jacMul(_k, _p.x, _p.y, 1);
         // Get back to affine
@@ -326,16 +301,13 @@ contract Ecc {
     /// @param _z2 coordinate z of square
     /// @return (qx, qy, qz) P1+square in Jacobian
     function jacAdd(
-            uint256 _x1,
-            uint256 _y1,
-            uint256 _z1,
-            uint256 _x2,
-            uint256 _y2,
-            uint256 _z2
-        ) 
-        internal pure 
-        returns (uint256, uint256, uint256) 
-    {
+        uint256 _x1,
+        uint256 _y1,
+        uint256 _z1,
+        uint256 _x2,
+        uint256 _y2,
+        uint256 _z2
+    ) internal pure returns (uint256, uint256, uint256) {
         if (_x1 == 0 && _y1 == 0) return (_x2, _y2, _z2);
         if (_x2 == 0 && _y2 == 0) return (_x1, _y1, _z1);
 
@@ -390,13 +362,10 @@ contract Ecc {
     /// @param _z coordinate z of P1
     /// @return (qx, qy, qz) 2P in Jacobian
     function jacDouble(
-            uint256 _x,
-            uint256 _y,
-            uint256 _z
-        ) 
-        internal pure 
-        returns (uint256, uint256, uint256) 
-    {
+        uint256 _x,
+        uint256 _y,
+        uint256 _z
+    ) internal pure returns (uint256, uint256, uint256) {
         if (_z == 0) return (_x, _y, _z);
 
         // We follow the equations described in https://pdfs.semanticscholar.org/5c64/29952e08025a9649c2b0ba32518e9a7fb5c2.pdf Section 5
@@ -409,11 +378,7 @@ contract Ecc {
         // s
         uint s = mulmod(4, mulmod(_x, y, P), P);
         // m
-        uint m = addmod(
-            mulmod(3, x, P),
-            mulmod(A, mulmod(z, z, P), P),
-            P
-        );
+        uint m = addmod(mulmod(3, x, P), mulmod(A, mulmod(z, z, P), P), P);
 
         // x, y, z at this point will be reassigned and rather represent qx, qy, qz from the paper
         // This allows to reduce the gas cost and stack footprint of the algorithm
@@ -438,14 +403,11 @@ contract Ecc {
     /// @param _z coordinate z of P1
     /// @return (qx, qy, qz) d*P1 in Jacobian
     function jacMul(
-            uint256 _d,
-            uint256 _x,
-            uint256 _y,
-            uint256 _z
-        ) 
-        internal pure 
-        returns (uint256, uint256, uint256) 
-    {
+        uint256 _d,
+        uint256 _x,
+        uint256 _y,
+        uint256 _z
+    ) internal pure returns (uint256, uint256, uint256) {
         // Early return in case that `_d == 0`
         if (_d == 0) {
             return (_x, _y, _z);
@@ -467,3 +429,4 @@ contract Ecc {
         return (qx, qy, qz);
     }
 }
+

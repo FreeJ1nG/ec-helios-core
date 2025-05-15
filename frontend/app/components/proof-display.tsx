@@ -15,7 +15,7 @@ export interface ProofDisplayProps<T extends Record<string, bigint | EcPoint>> {
   label: string
   proofLabel: string
   proof: T
-  verifyProofFn?: (proof: T) => boolean
+  verifyProofFn?: (proof: T) => boolean | Promise<boolean>
 }
 
 export default function ProofDisplay<
@@ -27,12 +27,12 @@ export default function ProofDisplay<
   proof,
   verifyProofFn,
 }: ProofDisplayProps<T>) {
-  const onVerifyProof = () => {
+  const onVerifyProof = async () => {
     if (!verifyProofFn) {
       toast.error('Can\'t verify proof, no verification function provided')
       return
     }
-    if (verifyProofFn(proof)) {
+    if (await verifyProofFn(proof)) {
       toast.success('Proof is valid!')
     }
     else {
