@@ -1,17 +1,12 @@
-import { ProjPointType } from '@noble/curves/abstract/weierstrass'
 import { secp256k1 } from '@noble/curves/secp256k1'
 
-import {
-  EncodedVote,
-  hashPointsToScalar,
-  toProjPoint,
-} from '~/lib/crypto/common.ts'
-import { ECElGamalCiphertext } from '~/lib/schemas/ecc.ts'
-import { Ballot } from '~/lib/schemas/helios.ts'
+import { EncodedVote, hashPointsToScalar } from '~/lib/crypto/common.ts'
+import { ECElGamalCiphertext, EcPoint } from '~/lib/schemas/ecc.ts'
+import { Ballot, DecryptionShare } from '~/lib/schemas/helios.ts'
 import { KeyOwnershipProof, WellFormedVoteProof } from '~/lib/schemas/zkp.ts'
 
 export async function verifyKeyOwnershipProof(
-  pk: ProjPointType<bigint>,
+  pk: EcPoint,
   proof: KeyOwnershipProof,
 ): Promise<boolean> {
   const b = secp256k1.ProjectivePoint.BASE.multiply(proof.d).subtract(
@@ -21,17 +16,12 @@ export async function verifyKeyOwnershipProof(
 }
 
 export async function verifyWellFormedVote(
-  pk: ProjPointType<bigint>,
+  pk: EcPoint,
   voteCiphertext: ECElGamalCiphertext,
   proof: WellFormedVoteProof,
 ): Promise<boolean> {
-  const a = toProjPoint(voteCiphertext.a)
-  const b = toProjPoint(voteCiphertext.b)
-  const a0_ = toProjPoint(proof.a0_)
-  const a1_ = toProjPoint(proof.a1_)
-  const b0_ = toProjPoint(proof.b0_)
-  const b1_ = toProjPoint(proof.b1_)
-  const { c0, c1, r0__, r1__ } = proof
+  const { a, b } = voteCiphertext
+  const { a0_, b0_, a1_, b1_, c0, c1, r0__, r1__ } = proof
 
   let lhs = secp256k1.ProjectivePoint.BASE.multiply(r0__)
   let rhs = a0_.add(a.multiply(c0))
@@ -56,7 +46,7 @@ export async function verifyWellFormedVote(
 }
 
 export async function verifySingleVoteSumProof(
-  pk: ProjPointType<bigint>,
+  pk: EcPoint,
   ballot: Ballot,
   candidateNum: number,
 ): Promise<boolean> {
@@ -67,14 +57,11 @@ export async function verifySingleVoteSumProof(
   let A = secp256k1.ProjectivePoint.ZERO
   let B = secp256k1.ProjectivePoint.ZERO
   for (let i = 0; i < ballot.votes.length; i++) {
-    A = A.add(toProjPoint(ballot.votes[i].ciphertext.a))
-    B = B.add(toProjPoint(ballot.votes[i].ciphertext.b))
+    A = A.add(ballot.votes[i].ciphertext.a)
+    B = B.add(ballot.votes[i].ciphertext.b)
   }
 
-  const R__ = ballot.singleVoteSumProof.R__
-  const A_ = toProjPoint(ballot.singleVoteSumProof.A_)
-  const B_ = toProjPoint(ballot.singleVoteSumProof.B_)
-  const c = ballot.singleVoteSumProof.c
+  const { R__, A_, B_, c } = ballot.singleVoteSumProof
 
   let lhs = secp256k1.ProjectivePoint.BASE.multiply(R__)
   let rhs = A_.add(A.multiply(c))
@@ -91,4 +78,29 @@ export async function verifySingleVoteSumProof(
   return (
     c % secp256k1.CURVE.n === (await hashPointsToScalar([pk, A, B, A_, B_]))
   )
+}
+
+export async function verifyValidDecryptionShareProof(
+  authorityPublicKeyShare: EcPoint,
+  ballotCiphertextTally: ECElGamalCiphertext,
+  decryptionShare: DecryptionShare,
+): Promise<boolean> {
+  const d = decryptionShare.d
+  const { u, v, s } = decryptionShare.validDecryptionShareProof
+  const { a } = ballotCiphertextTally
+  const c = await hashPointsToScalar([
+    authorityPublicKeyShare,
+    ballotCiphertextTally.a,
+    ballotCiphertextTally.b,
+    u,
+    v,
+  ])
+
+  let lhs = a.multiply(s)
+  let rhs = u.add(d.multiply(c))
+  if (!lhs.equals(rhs)) return false
+
+  lhs = secp256k1.ProjectivePoint.BASE.multiply(s)
+  rhs = v.add(authorityPublicKeyShare.multiply(c))
+  return lhs.equals(rhs)
 }

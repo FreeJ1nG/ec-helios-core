@@ -1,15 +1,10 @@
-import { ProjPointType } from '@noble/curves/abstract/weierstrass'
 import { secp256k1 } from '@noble/curves/secp256k1'
 
-import {
-  EncodedVote,
-  hashPointsToScalar,
-  rndEc,
-  toProjPoint,
-} from '~/lib/crypto/common.ts'
+import { EncodedVote, hashPointsToScalar, rndEc } from '~/lib/crypto/common.ts'
 import { encrypt } from '~/lib/crypto/elgamal.ts'
 import { AuthorityKey } from '~/lib/crypto/keys.ts'
-import { Vote } from '~/lib/schemas/helios.ts'
+import { ECElGamalCiphertext, EcPoint } from '~/lib/schemas/ecc.ts'
+import { DecryptionShare, Vote } from '~/lib/schemas/helios.ts'
 import { KeyOwnershipProof, SingleVoteSumProof } from '~/lib/schemas/zkp.ts'
 
 export async function generateAuthorityKeyOwnershipProof(
@@ -27,14 +22,14 @@ export async function generateAuthorityKeyOwnershipProof(
 
 export async function encryptVoteWithProof(
   v: number, // should either be 0 or 1
-  pk: ProjPointType<bigint>,
+  pk: EcPoint,
 ): Promise<[Vote, bigint]> {
   if (v != 0 && v != 1)
     throw new Error('Vote can only be zero or one, invalid ballot')
-  let a0_: ProjPointType<bigint>
-  let a1_: ProjPointType<bigint>
-  let b0_: ProjPointType<bigint>
-  let b1_: ProjPointType<bigint>
+  let a0_: EcPoint
+  let a1_: EcPoint
+  let b0_: EcPoint
+  let b1_: EcPoint
   let c0: bigint
   let c1: bigint
   let r0__: bigint
@@ -43,8 +38,8 @@ export async function encryptVoteWithProof(
   const r = rndEc()
   const voteCiphertext = encrypt(v, pk, r)
 
-  const a = toProjPoint(voteCiphertext.a)
-  const b = toProjPoint(voteCiphertext.b)
+  const a = voteCiphertext.a
+  const b = voteCiphertext.b
   if (v == 0) {
     // Step 1
     const b_ = b.subtract(EncodedVote[1])
@@ -111,17 +106,17 @@ export async function encryptVoteWithProof(
 export async function generateSingleVoteSumProof(
   votes: Vote[],
   R: bigint,
-  pk: ProjPointType<bigint>,
+  pk: EcPoint,
 ): Promise<SingleVoteSumProof> {
   if (votes.length === 0)
     throw new Error(
       'There must be at least one vote to generate single vote sum proof',
     )
-  let A = toProjPoint(votes[0].ciphertext.a),
-    B = toProjPoint(votes[0].ciphertext.b)
+  let A = votes[0].ciphertext.a,
+    B = votes[0].ciphertext.b
   for (let i = 1; i < votes.length; i++) {
-    A = A.add(toProjPoint(votes[i].ciphertext.a))
-    B = B.add(toProjPoint(votes[i].ciphertext.b))
+    A = A.add(votes[i].ciphertext.a)
+    B = B.add(votes[i].ciphertext.b)
   }
 
   const R_ = rndEc()
@@ -134,5 +129,31 @@ export async function generateSingleVoteSumProof(
     B_,
     c,
     R__,
+  }
+}
+
+export async function generateDecryptionShare(
+  authKey: AuthorityKey,
+  candidateTallyCiphertext: ECElGamalCiphertext,
+): Promise<DecryptionShare> {
+  const r = rndEc()
+  const u = candidateTallyCiphertext.a.multiply(r)
+  const v = secp256k1.ProjectivePoint.BASE.multiply(r)
+  const c = await hashPointsToScalar([
+    authKey.pk,
+    candidateTallyCiphertext.a,
+    candidateTallyCiphertext.b,
+    u,
+    v,
+  ])
+  const s = (r + c * authKey.sk) % secp256k1.CURVE.n
+
+  return {
+    d: candidateTallyCiphertext.a.multiply(authKey.sk),
+    validDecryptionShareProof: {
+      u,
+      v,
+      s,
+    },
   }
 }

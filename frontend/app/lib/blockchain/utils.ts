@@ -28,35 +28,37 @@ export async function serverSideConnectBlockchain() {
   }
 }
 
-export function decodeStruct<T extends z.AnyZodObject>(
+export function decodeStruct<T extends z.ZodTypeAny>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   struct: any,
   schema: T,
 ): z.infer<T> {
   if (!struct) throw new Error('Data is falsy:', struct)
-  const keys = Object.keys(schema.shape)
+  const sch: z.AnyZodObject =
+    schema instanceof z.ZodEffects ? schema._def.schema : schema
+  const keys = Object.keys(sch.shape)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const decoded: any = {}
   for (const key of keys) {
-    if (schema.shape[key] instanceof z.ZodObject) {
-      decoded[key] = decodeStruct(struct[key], schema.shape[key])
+    if (sch.shape[key] instanceof z.ZodEffects) {
+      decoded[key] = decodeStruct(struct[key], sch.shape[key]._def.schema)
     }
-    else if (schema.shape[key] instanceof z.ZodArray) {
-      decoded[key] = decodeArrayOfStruct(
-        struct[key],
-        schema.shape[key]._def.type,
-      )
+    else if (sch.shape[key] instanceof z.ZodObject) {
+      decoded[key] = decodeStruct(struct[key], sch.shape[key])
+    }
+    else if (sch.shape[key] instanceof z.ZodArray) {
+      decoded[key] = decodeArrayOfStruct(struct[key], sch.shape[key]._def.type)
     }
     else {
       decoded[key] = struct[key]
     }
   }
 
-  return schema.parse(decoded)
+  return sch.parse(decoded)
 }
 
-export function decodeArrayOfStruct<T extends z.AnyZodObject>(
+export function decodeArrayOfStruct<T extends z.ZodTypeAny>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   arrayOfStruct: any,
   schema: T,
@@ -68,7 +70,12 @@ export function decodeArrayOfStruct<T extends z.AnyZodObject>(
 
   const res = []
   for (const elm of arrayOfStruct) {
-    res.push(decodeStruct(elm, schema))
+    if (schema instanceof z.ZodArray) {
+      res.push(decodeArrayOfStruct(elm, schema._def.type))
+    }
+    else {
+      res.push(decodeStruct(elm, schema))
+    }
   }
 
   return res

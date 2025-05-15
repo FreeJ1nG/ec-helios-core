@@ -24,6 +24,12 @@ export default function Navbar() {
         <Button variant="ghost" onClick={() => navigate('/votes')}>
           View Votes
         </Button>
+        <Button variant="ghost" onClick={() => navigate('/decrypt')}>
+          Decrypt Votes
+        </Button>
+        <Button variant="ghost" onClick={() => navigate('/tally')}>
+          View Vote Tally
+        </Button>
       </div>
       <div className="flex items-center">
         <div>

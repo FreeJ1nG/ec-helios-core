@@ -4,10 +4,12 @@ import { ECElGamalCiphertextSchema, ecPointSchema } from '~/lib/schemas/ecc.ts'
 import {
   keyOwnershipProofSchema,
   singleVoteSumProofSchema,
+  validDecryptionShareProofSchema,
   wellFormedVoteProofSchema,
 } from '~/lib/schemas/zkp.ts'
 
 export const authoritySchema = z.object({
+  owner: z.string(),
   publicKey: ecPointSchema,
   proof: keyOwnershipProofSchema,
 })
@@ -34,3 +36,11 @@ export const paginatedBallotsSchema = z.object({
   ballots: z.array(ballotSchema),
   totalPage: z.bigint(),
 })
+
+export const decryptionShareSchema = z.object({
+  decryptedBy: z.string(),
+  d: ecPointSchema,
+  validDecryptionShareProof: validDecryptionShareProofSchema,
+})
+
+export type DecryptionShare = z.infer<typeof decryptionShareSchema>

@@ -1,5 +1,5 @@
+import EcPointDisplay from '~/components/ecpoint-display.tsx'
 import ProofDisplay from '~/components/proof-display.tsx'
-import { toProjPoint } from '~/lib/crypto/common.ts'
 import { verifyKeyOwnershipProof } from '~/lib/crypto/zkp/verify.ts'
 import { Authority } from '~/lib/schemas/helios.ts'
 
@@ -20,20 +20,13 @@ export default function AuthorityList({ authorities }: AuthorityListProps) {
             Authority #
             {i + 1}
           </div>
-          <div>
-            x:
-            {' ' + auth.publicKey.x.toString()}
-          </div>
-          <div>
-            y:
-            {' ' + auth.publicKey.y.toString()}
-          </div>
+          <EcPointDisplay p={auth.publicKey} />
           <ProofDisplay
             label="that authority has a matching secret key"
             proofLabel="ownership"
             proof={auth.proof}
             verifyProofFn={proof =>
-              verifyKeyOwnershipProof(toProjPoint(auth.publicKey), proof)}
+              verifyKeyOwnershipProof(auth.publicKey, proof)}
             className="mt-1"
           />
         </div>

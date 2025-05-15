@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 
+import EcPointDisplay from '~/components/ecpoint-display.tsx'
 import LoadingScreen from '~/components/loading-screen.tsx'
 import PaginationGroup from '~/components/pagination-group.tsx'
 import ProofDisplay from '~/components/proof-display.tsx'
 import { decodeStruct } from '~/lib/blockchain/utils.ts'
-import { toProjPoint } from '~/lib/crypto/common.ts'
 import {
   verifySingleVoteSumProof,
   verifyWellFormedVote,
@@ -32,17 +32,6 @@ export default function VotesPage() {
     })().finally(() => setLoading(false))
   }, [contract, page])
 
-  useEffect(() => {
-    if (!contract) return
-    setLoading(true);
-    (async () => {
-      const cballots = await contract.getBallots(page)
-      const ballots = decodeStruct(cballots, paginatedBallotsSchema)
-      setBallots(ballots.ballots)
-      setTotalPage(Number(ballots.totalPage))
-    })().finally(() => setLoading(false))
-  }, [contract])
-
   return loading || !candidates ? (
     <LoadingScreen />
   ) : (
@@ -61,28 +50,20 @@ export default function VotesPage() {
             {ballot.votes.map((v, i) => (
               <div
                 key={v.wellFormedVoteProof.c0}
-                className="mt-2 flex flex-col"
+                className="mt-4 flex flex-col"
               >
                 <div>
                   Vote ciphertext towards
                   {' ' + candidates[i]}
                   : (a, b)
                 </div>
-                <div>
-                  a.x:
-                  {' ' + v.ciphertext.a.x.toString()}
+                <div className="flex gap-4">
+                  <div className="font-bold">a</div>
+                  <EcPointDisplay p={v.ciphertext.a} />
                 </div>
-                <div>
-                  a.y:
-                  {' ' + v.ciphertext.a.y.toString()}
-                </div>
-                <div>
-                  b.x:
-                  {' ' + v.ciphertext.b.x.toString()}
-                </div>
-                <div>
-                  b.y:
-                  {' ' + v.ciphertext.b.y.toString()}
+                <div className="mt-2 flex gap-4">
+                  <div className="font-bold">b</div>
+                  <EcPointDisplay p={v.ciphertext.b} />
                 </div>
                 <ProofDisplay
                   className="mt-2"
@@ -93,7 +74,7 @@ export default function VotesPage() {
                     electionPublicKey
                       ? proof =>
                         verifyWellFormedVote(
-                          toProjPoint(electionPublicKey),
+                          electionPublicKey,
                           v.ciphertext,
                           proof,
                         )
@@ -111,7 +92,7 @@ export default function VotesPage() {
               electionPublicKey
                 ? () =>
                     verifySingleVoteSumProof(
-                      toProjPoint(electionPublicKey),
+                      electionPublicKey,
                       ballot,
                       candidates.length,
                     )
@@ -119,6 +100,9 @@ export default function VotesPage() {
             }
             className="mt-4"
           />
+          {i < ballots.length - 1 && (
+            <div className="mt-8 mb-4 h-[1px] w-full bg-gray-400" />
+          )}
         </div>
       ))}
       <div className="mt-4" />

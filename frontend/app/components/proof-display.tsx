@@ -1,6 +1,7 @@
 import { ComponentProps } from 'react'
 import { toast } from 'sonner'
 
+import EcPointDisplay from '~/components/ecpoint-display.tsx'
 import { Button } from '~/components/ui/button.tsx'
 import {
   Popover,
@@ -46,7 +47,7 @@ export default function ProofDisplay<
     <div className={className}>
       <Popover>
         <PopoverTrigger asChild>
-          <Button>
+          <Button variant="outline">
             View proof
             {' '}
             {label}
@@ -70,16 +71,7 @@ export default function ProofDisplay<
                 <div className="w-8 font-bold">{key.replaceAll('_', '\'')}</div>
                 <div>
                   {typeof proof[key] === 'object' ? (
-                    <div className="flex flex-col">
-                      <div>
-                        x:
-                        {' ' + proof[key].x.toString()}
-                      </div>
-                      <div>
-                        y:
-                        {' ' + proof[key].y.toString()}
-                      </div>
-                    </div>
+                    <EcPointDisplay p={proof[key]} />
                   ) : (
                     proof[key].toString()
                   )}

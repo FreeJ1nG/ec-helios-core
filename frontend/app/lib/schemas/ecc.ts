@@ -1,9 +1,12 @@
+import { secp256k1 } from '@noble/curves/secp256k1'
 import { z } from 'zod'
 
-export const ecPointSchema = z.object({
-  x: z.bigint(),
-  y: z.bigint(),
-})
+export const ecPointSchema = z
+  .object({
+    x: z.bigint(),
+    y: z.bigint(),
+  })
+  .transform(({ x, y }) => secp256k1.ProjectivePoint.fromAffine({ x, y }))
 
 export type EcPoint = z.infer<typeof ecPointSchema>
 
@@ -13,14 +16,3 @@ export const ECElGamalCiphertextSchema = z.object({
 })
 
 export type ECElGamalCiphertext = z.infer<typeof ECElGamalCiphertextSchema>
-
-export const elGamalParamsSchema = z.object({
-  gx: z.bigint(), // Generator point x-coordinate
-  gy: z.bigint(), // Generator point y-coordinate
-  a: z.bigint(), // Elliptic curve parameter A
-  b: z.bigint(), // Elliptic curve parameter B
-  p: z.bigint(), // Prime modulus
-  n: z.bigint(), // Order of the curve
-})
-
-export type ElGamalParams = z.infer<typeof elGamalParamsSchema>

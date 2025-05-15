@@ -30,3 +30,13 @@ export const singleVoteSumProofSchema = z.object({
 })
 
 export type SingleVoteSumProof = z.infer<typeof singleVoteSumProofSchema>
+
+export const validDecryptionShareProofSchema = z.object({
+  u: ecPointSchema,
+  v: ecPointSchema,
+  s: z.bigint(),
+})
+
+export type ValidDecryptionShareProof = z.infer<
+  typeof validDecryptionShareProofSchema
+>

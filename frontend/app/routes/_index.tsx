@@ -3,9 +3,9 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 
 import AuthorityList from '~/components/authority-list.tsx'
+import EcPointDisplay from '~/components/ecpoint-display.tsx'
 import { Timer } from '~/components/timer.tsx'
 import { Button } from '~/components/ui/button.tsx'
-import { toProjPoint } from '~/lib/crypto/common.ts'
 import {
   encryptVoteWithProof,
   generateSingleVoteSumProof,
@@ -29,13 +29,12 @@ export default function Index() {
     if (!candidates) throw new Error('Unable to get election candidates')
     setIsSubmittingBallot(true)
     try {
-      const epk = toProjPoint(electionPublicKey)
       let R = 0n
       const votes = await Promise.all(
         Array.from({ length: candidates.length }).map(async (_, i) => {
           const [vote, r] = await encryptVoteWithProof(
             i === selectedCandidate ? 1 : 0,
-            epk,
+            electionPublicKey,
           )
           R = (R + r) % secp256k1.CURVE.n
           return vote
@@ -44,7 +43,7 @@ export default function Index() {
       const singleVoteSumProof = await generateSingleVoteSumProof(
         votes,
         R,
-        epk,
+        electionPublicKey,
       )
 
       const transaction = await contract.submitBallot(
@@ -84,17 +83,13 @@ export default function Index() {
           </div>
         </>
       )}
-      <div className="flex flex-col items-start">
-        <div className="text-xl font-semibold">Election Public Key:</div>
-        <div className="text-lg">
-          x:
-          {' ' + electionPublicKey?.x.toString()}
+
+      {electionPublicKey && (
+        <div className="flex flex-col items-start">
+          <div className="text-xl font-semibold">Election Public Key:</div>
+          <EcPointDisplay p={electionPublicKey} />
         </div>
-        <div className="text-lg">
-          y:
-          {' ' + electionPublicKey?.y.toString()}
-        </div>
-      </div>
+      )}
 
       {authorities && <AuthorityList authorities={authorities} />}
 

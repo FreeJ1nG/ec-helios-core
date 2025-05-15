@@ -42,6 +42,12 @@ contract Zkp is Ecc {
         uint256 r1__;
     }
 
+    struct ValidDecryptionShareProof {
+        EcPoint u;
+        EcPoint v;
+        uint256 s;
+    }
+
     function verifyWellFormedVote(
         ECElGamalCiphertext memory _ciphertext,
         WellFormedVoteProof memory _proof,
@@ -129,5 +135,29 @@ contract Zkp is Ecc {
 
         // Third equation to check: c = H(pk, A, B, A_, B_)
         return (_proof.c) % N == hashMultiplePointsToScalar(_points) % N;
+    }
+
+    function verifyValidDecryptionShareProof(
+        EcPoint memory _authorityPublicKey,
+        EcPoint memory _d,
+        ValidDecryptionShareProof memory _proof,
+        ECElGamalCiphertext memory _ballotCiphertextTally
+    ) internal view returns (bool) {
+        EcPoint[] memory _points = new EcPoint[](5);
+        _points[0] = _authorityPublicKey;
+        _points[1] = _ballotCiphertextTally.a;
+        _points[2] = _ballotCiphertextTally.b;
+        _points[3] = _proof.u;
+        _points[4] = _proof.v;
+
+        uint256 c = hashMultiplePointsToScalar(_points);
+
+        EcPoint memory lhs = ecMul(_proof.s, _ballotCiphertextTally.a);
+        EcPoint memory rhs = ecAdd(_proof.u, ecMul(c, _d));
+        if (lhs.x != rhs.x || lhs.y != rhs.y) return false;
+
+        lhs = ecMul(_proof.s, G);
+        rhs = ecAdd(_proof.v, ecMul(c, _authorityPublicKey));
+        return (lhs.x == rhs.x && lhs.y == rhs.y);
     }
 }

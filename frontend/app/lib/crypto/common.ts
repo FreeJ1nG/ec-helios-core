@@ -1,8 +1,6 @@
 import { ProjPointType } from '@noble/curves/abstract/weierstrass'
 import { secp256k1 } from '@noble/curves/secp256k1'
 
-import { EcPoint } from '~/lib/schemas/ecc.ts'
-
 /**
  * @description This function converts an ArrayBuffer to a hex string.
  * @param buf - The ArrayBuffer to be converted to a hex string
@@ -76,7 +74,3 @@ export const EncodedVote = [
   secp256k1.ProjectivePoint.BASE,
   secp256k1.ProjectivePoint.BASE.multiply(2n),
 ]
-
-export function toProjPoint(p: EcPoint): ProjPointType<bigint> {
-  return secp256k1.ProjectivePoint.fromAffine({ x: p.x, y: p.y })
-}

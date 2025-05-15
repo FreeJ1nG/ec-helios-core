@@ -1,7 +1,7 @@
 import { ProjPointType } from '@noble/curves/abstract/weierstrass'
 import { secp256k1 } from '@noble/curves/secp256k1'
 
-import { rndEc, toProjPoint } from '~/lib/crypto/common.ts'
+import { rndEc } from '~/lib/crypto/common.ts'
 import { verifyKeyOwnershipProof } from '~/lib/crypto/zkp/verify.ts'
 import { EcPoint } from '~/lib/schemas/ecc.ts'
 import { Authority } from '~/lib/schemas/helios.ts'
@@ -29,7 +29,7 @@ export async function calculateElectionPublicKey(
 ): Promise<EcPoint> {
   const verifications = await Promise.all(
     authorities.map(async auth =>
-      verifyKeyOwnershipProof(toProjPoint(auth.publicKey), auth.proof),
+      verifyKeyOwnershipProof(auth.publicKey, auth.proof),
     ),
   )
   for (let i = 0; i < verifications.length; i++) {
@@ -39,11 +39,9 @@ export async function calculateElectionPublicKey(
       )
     }
   }
-  let electionPublicKey = toProjPoint(authorities[0].publicKey)
+  let electionPublicKey = authorities[0].publicKey
   for (let i = 1; i < authorities.length; i++) {
-    electionPublicKey = electionPublicKey.add(
-      toProjPoint(authorities[i].publicKey),
-    )
+    electionPublicKey = electionPublicKey.add(authorities[i].publicKey)
   }
   return electionPublicKey
 }

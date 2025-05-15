@@ -2,13 +2,11 @@ import { ethers } from 'ethers'
 import { create } from 'zustand'
 
 import ElectionContractJson from '~/artifacts/contracts/Election.sol/Election.json'
-import { decodeStruct } from '~/lib/blockchain/utils.ts'
-import { ElGamalParams, elGamalParamsSchema } from '~/lib/schemas/ecc.ts'
 import { usePersistStore } from '~/lib/store/persist.ts'
 
 interface BlockchainStore {
+  myAddress?: string
   contractAddress?: string
-  elGamalParams?: ElGamalParams
   contract?: ethers.Contract
   accounts: ethers.JsonRpcSigner[]
   updateContractWithNewAccount: (accountIndex: number) => void
@@ -17,8 +15,8 @@ interface BlockchainStore {
 }
 
 export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
+  myAddress: undefined,
   contractAddress: undefined,
-  elGamalParams: undefined,
   contract: undefined,
   accounts: [],
   updateContractWithNewAccount: (accountIndex) => {
@@ -38,6 +36,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     set(state => ({
       ...state,
       contract,
+      myAddress: signer.address,
     }))
   },
   setContract: async () => {
@@ -59,17 +58,11 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         signer,
       )
 
-      const elGamalParams = decodeStruct(
-        await contract.getECCParams(),
-        elGamalParamsSchema,
-      )
-
       set(state => ({
         ...state,
-        elGamalParams,
         contract,
-        signer,
         accounts,
+        myAddress: signer.address,
       }))
     }
     catch (error) {
