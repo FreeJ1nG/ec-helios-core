@@ -10,13 +10,15 @@ export interface AuthorityListProps {
 export default function AuthorityList({ authorities }: AuthorityListProps) {
   return (
     <div className="flex flex-col">
-      <div className="mt-4 text-xl font-semibold">List of Authorities:</div>
+      <div className="mt-6 mb-4 text-xl font-semibold">
+        List of Authorities:
+      </div>
       {authorities.map((auth, i) => (
         <div
           key={auth.publicKey.x.toString()}
           className="mb-2 flex flex-col items-start"
         >
-          <div>
+          <div className="mb-1 font-bold">
             Authority #
             {i + 1}
           </div>
@@ -27,7 +29,7 @@ export default function AuthorityList({ authorities }: AuthorityListProps) {
             proof={auth.proof}
             verifyProofFn={proof =>
               verifyKeyOwnershipProof(auth.publicKey, proof)}
-            className="mt-1"
+            className="mt-1 mb-3"
           />
         </div>
       ))}
