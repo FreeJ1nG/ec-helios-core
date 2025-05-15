@@ -81,11 +81,6 @@ export function combineDecryptionShares(
       dSum = dSum.add(decryptionSharesForCandidate[i][j].d)
     }
     const encodedVote = ciphertextTallies[i].b.subtract(dSum)
-    console.log(' >> 0', EncodedVote[0].multiply(BigInt(ballotAmount)))
-    console.log(
-      ` >> ${ballotAmount}`,
-      EncodedVote[1].multiply(BigInt(ballotAmount)),
-    )
     if (encodedVote.equals(EncodedVote[0].multiply(BigInt(ballotAmount)))) {
       decryptions.push(0)
       continue
@@ -94,7 +89,6 @@ export function combineDecryptionShares(
       const pv = EncodedVote[1]
         .multiply(BigInt(v))
         .add(EncodedVote[0].multiply(BigInt(ballotAmount - v)))
-      console.log(` >> ${v}`, pv)
       if (pv.equals(encodedVote)) {
         decryptions.push(v)
         break
