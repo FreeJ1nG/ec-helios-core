@@ -6,8 +6,6 @@ import "./Utils.sol";
 import "hardhat/console.sol";
 
 contract Election is Ecc, Zkp, Utils {
-    string[] public candidates;
-
     struct Key {
         address owner;
         EcPoint publicKey;
@@ -47,6 +45,7 @@ contract Election is Ecc, Zkp, Utils {
         uint256 totalPage;
     }
 
+    string[] public candidates;
     int64[] public voteCountForCandidate;
     EcPoint[] public encodedVotes;
     ECElGamalCiphertext[] public ciphertextTallies;
