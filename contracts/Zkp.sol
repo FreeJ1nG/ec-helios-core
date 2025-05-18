@@ -9,26 +9,24 @@ contract Zkp is Ecc {
         uint256 d;
     }
 
-    function verifyKeyOwnershipProof(
-        EcPoint memory _publicKey,
-        KeyOwnershipProof memory _proof
-    ) internal view returns (bool) {
-        EcPoint memory Gd = ecMul(_proof.d, G);
-        EcPoint memory pkc = ecMul(_proof.c, _publicKey);
-        EcPoint memory b = ecSub(Gd, pkc);
-
-        EcPoint[] memory _points = new EcPoint[](2);
-        _points[0] = _publicKey;
-        _points[1] = b;
-
-        return _proof.c == hashMultiplePointsToScalar(_points);
-    }
-
     struct SingleVoteSumProof {
         EcPoint A_;
         EcPoint B_;
         uint256 c;
         uint256 R__;
+    }
+
+    function equals(
+        SingleVoteSumProof storage mine,
+        SingleVoteSumProof memory other
+    ) internal view returns (bool) {
+        return
+            mine.A_.x == other.A_.x &&
+            mine.A_.y == other.A_.y &&
+            mine.B_.x == other.B_.x &&
+            mine.B_.y == other.B_.y &&
+            mine.c == other.c &&
+            mine.R__ == other.R__;
     }
 
     struct WellFormedVoteProof {
@@ -42,10 +40,44 @@ contract Zkp is Ecc {
         uint256 r1__;
     }
 
+    function equals(
+        WellFormedVoteProof storage mine,
+        WellFormedVoteProof memory other
+    ) internal view returns (bool) {
+        return
+            mine.a0_.x == other.a0_.x &&
+            mine.a0_.y == other.a0_.y &&
+            mine.a1_.x == other.a1_.x &&
+            mine.a1_.y == other.a1_.y &&
+            mine.b0_.x == other.b0_.x &&
+            mine.b0_.y == other.b0_.y &&
+            mine.b1_.x == other.b1_.x &&
+            mine.b1_.y == other.b1_.y &&
+            mine.c0 == other.c0 &&
+            mine.c1 == other.c1 &&
+            mine.r0__ == other.r0__ &&
+            mine.r1__ == other.r1__;
+    }
+
     struct ValidDecryptionShareProof {
         EcPoint u;
         EcPoint v;
         uint256 s;
+    }
+
+    function verifyKeyOwnershipProof(
+        EcPoint memory _publicKey,
+        KeyOwnershipProof memory _proof
+    ) internal view returns (bool) {
+        EcPoint memory Gd = ecMul(_proof.d, G);
+        EcPoint memory pkc = ecMul(_proof.c, _publicKey);
+        EcPoint memory b = ecSub(Gd, pkc);
+
+        EcPoint[] memory _points = new EcPoint[](2);
+        _points[0] = _publicKey;
+        _points[1] = b;
+
+        return _proof.c == hashMultiplePointsToScalar(_points);
     }
 
     function verifyWellFormedVote(

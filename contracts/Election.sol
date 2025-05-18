@@ -3,7 +3,6 @@ pragma solidity ^0.8.28;
 import "./Ecc.sol";
 import "./Zkp.sol";
 import "./Utils.sol";
-import "hardhat/console.sol";
 
 contract Election is Ecc, Zkp, Utils {
     struct Key {
@@ -163,7 +162,25 @@ contract Election is Ecc, Zkp, Utils {
             _ballot.votes.length == candidates.length,
             "Invalid number of votes, should match the number of candidates"
         );
-        // Verify the single vote sum proof
+        for (uint256 i = 0; i < ballots.length; i++) {
+            // Ballot weeding
+            require(
+                !equals(
+                    ballots[i].singleVoteSumProof,
+                    _ballot.singleVoteSumProof
+                ),
+                "Proof can't be a duplicate from previously submitted ballots"
+            );
+            for (uint256 j = 0; j < _ballot.votes.length; j++) {
+                require(
+                    !equals(
+                        ballots[i].votes[j].wellFormedVoteProof,
+                        _ballot.votes[j].wellFormedVoteProof
+                    ),
+                    "Proof can't be a duplicate from previously submitted ballots"
+                );
+            }
+        } // Verify the single vote sum proof
         for (uint256 i = 0; i < _ballot.votes.length; i++) {
             require(
                 verifyWellFormedVote(
