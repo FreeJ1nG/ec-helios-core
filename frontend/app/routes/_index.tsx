@@ -14,20 +14,23 @@ import { useBlockchainStore } from '~/lib/store/blockchain.ts'
 import { useDataStore } from '~/lib/store/data.ts'
 
 export default function Index() {
-  const { contract } = useBlockchainStore()
+  const { contract, myAddress } = useBlockchainStore()
   const { candidates, authorities, electionEndTime, electionPublicKey } =
     useDataStore()
   const [selectedCandidate, setSelectedCandidate] = useState<
     number | undefined
   >(undefined)
-  const [isSubmittingBallot, setIsSubmittingBallot] = useState<boolean>(false)
+  const [addressIsSubmittingBallot, setAddressIsSubmittingBallot] = useState<
+    string[]
+  >([])
 
   const handleSubmit = async () => {
     if (!contract) throw new Error('Unable to get contract')
     if (!electionPublicKey)
       throw new Error('Unable to get election public key')
     if (!candidates) throw new Error('Unable to get election candidates')
-    setIsSubmittingBallot(true)
+    if (!myAddress) throw new Error('Can\'t get user address')
+    setAddressIsSubmittingBallot(prev => [...prev, myAddress])
     try {
       let R = 0n
       const votes = await Promise.all(
@@ -66,7 +69,9 @@ export default function Index() {
       )
     }
     finally {
-      setIsSubmittingBallot(false)
+      setAddressIsSubmittingBallot(prev =>
+        prev.filter(addr => addr !== myAddress),
+      )
     }
   }
 
@@ -122,7 +127,9 @@ export default function Index() {
             ))}
           </div>
           <Button
-            loading={isSubmittingBallot}
+            loading={addressIsSubmittingBallot.some(
+              addr => addr === myAddress,
+            )}
             onClick={handleSubmit}
             type="submit"
             className="mt-4 px-4 py-2"
