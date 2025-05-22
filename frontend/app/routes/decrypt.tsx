@@ -19,6 +19,7 @@ import {
 import { DecryptionShare } from '~/lib/schemas/helios.ts'
 import { useBlockchainStore } from '~/lib/store/blockchain.ts'
 import { useDataStore } from '~/lib/store/data.ts'
+import { extractErrorReason } from '~/lib/utils.ts'
 
 export default function DecryptPage() {
   const navigate = useNavigate()
@@ -140,9 +141,8 @@ export default function DecryptPage() {
       toast.success('Successfully submitted decryption share!')
     }
     catch (e) {
-      console.error(e)
       toast.error(
-        'Unable to submit decryption share, please read console to find the error reason',
+        `Unable to submit decryption share, ${extractErrorReason(e)}`,
       )
     }
     finally {

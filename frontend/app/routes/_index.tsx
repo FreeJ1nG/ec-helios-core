@@ -12,6 +12,7 @@ import {
 } from '~/lib/crypto/zkp/generate.ts'
 import { useBlockchainStore } from '~/lib/store/blockchain.ts'
 import { useDataStore } from '~/lib/store/data.ts'
+import { extractErrorReason } from '~/lib/utils.ts'
 
 export default function Index() {
   const { contract, myAddress } = useBlockchainStore()
@@ -25,11 +26,12 @@ export default function Index() {
   >([])
 
   const handleSubmit = async () => {
-    if (!contract) throw new Error('Unable to get contract')
-    if (!electionPublicKey)
-      throw new Error('Unable to get election public key')
-    if (!candidates) throw new Error('Unable to get election candidates')
-    if (!myAddress) throw new Error('Can\'t get user address')
+    if (!contract || !electionPublicKey || !candidates || !myAddress) {
+      toast.error(
+        'Some neccessary variable(s) haven\'t been initialized properly, can\'t submit ballot',
+      )
+      return
+    }
     setAddressIsSubmittingBallot(prev => [...prev, myAddress])
     try {
       let R = 0n
@@ -63,10 +65,7 @@ export default function Index() {
       toast.success('Your ballot has been cast! thanks for voting :D')
     }
     catch (e) {
-      console.error(e)
-      toast.error(
-        'Unable to cast your ballot, read console for error message (yeah it\'s currently a bit tedious)',
-      )
+      toast.error(`Unable to cast your ballot, ${extractErrorReason(e)}`)
     }
     finally {
       setAddressIsSubmittingBallot(prev =>

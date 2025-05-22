@@ -27,6 +27,7 @@ import {
 } from '~/lib/schemas/helios.ts'
 import { useBlockchainStore } from '~/lib/store/blockchain.ts'
 import { useDataStore } from '~/lib/store/data.ts'
+import { extractErrorReason } from '~/lib/utils.ts'
 
 export default function TallyPage() {
   const { contract } = useBlockchainStore()
@@ -103,8 +104,7 @@ export default function TallyPage() {
       )
     }
     catch (e) {
-      console.error(e)
-      toast.error('Unable to combine decryptions, read console for more info')
+      toast.error(`Unable to combine decryptions, ${extractErrorReason(e)}`)
     }
     finally {
       setIsCombining(false)
