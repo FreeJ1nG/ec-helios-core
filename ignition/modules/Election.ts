@@ -43,7 +43,7 @@ const penyuKey = {
 export default buildModule("ElectionModule", (m) => {
   const election = m.contract("Election", [
     [andrewKey, penyuKey],
-    ["Ferry", "Valen", "Ruben"],
+    ["Alice", "Bob", "Eve"],
     [
       "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", // Account #0 from hardhat
       andrewKey.owner,
@@ -58,7 +58,7 @@ export default buildModule("ElectionModule", (m) => {
       "0xBcd4042DE499D14e55001CcbB24a551F3b954096", // Account #10 from hardhat
       "0x71bE63f3384f5fb98995898A86B02Fb2426c5788", // Account #11 from hardhat
     ],
-    dayjs().add(15, "seconds").unix(),
+    dayjs().add(10, "minutes").unix(),
   ]);
 
   return { election };
