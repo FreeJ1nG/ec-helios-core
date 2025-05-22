@@ -57,8 +57,6 @@ contract Election is Ecc, Zkp, Utils {
     mapping(address => bool) hasVoted;
     mapping(address => bool) hasAuthoritySubmittedDecryptionShare;
 
-    event BallotCast(Ballot _ballot);
-
     constructor(
         Key[] memory _authorityKeys,
         string[] memory _candidates,
@@ -233,7 +231,6 @@ contract Election is Ecc, Zkp, Utils {
         });
         ballots.push(newBallot);
         hasVoted[msg.sender] = true;
-        emit BallotCast(newBallot);
     }
 
     function getBallots(
